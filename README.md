@@ -1,5 +1,7 @@
 # ObjectCoder
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![SwiftPM](https://github.com/nearfri/ObjectCoder/workflows/SwiftPM/badge.svg)](https://github.com/nearfri/ObjectCoder/actions?query=workflow%3ASwiftPM)
+
 
 Swift Object Encoder/Decoder compatible with UserDefaults
 

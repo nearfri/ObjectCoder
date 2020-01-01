@@ -1,5 +1,5 @@
 import XCTest
-@testable import Preferences
+@testable import ObjectCoder
 
 // ref.: https://github.com/apple/swift/blob/master/test/stdlib/TestPlistEncoder.swift
 

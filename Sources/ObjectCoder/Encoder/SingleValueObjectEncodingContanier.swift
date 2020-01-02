@@ -10,20 +10,6 @@ internal class SingleValueObjectEncodingContanier: SingleValueEncodingContainer 
         self.codingPath = codingPath
     }
     
-    private func assertCanEncodeNewValue(file: StaticString = #file, line: UInt = #line) {
-        precondition(encoder.canEncodeNewValue, """
-                Attempt to encode value through single value container \
-                when previously value already encoded.
-                """, file: file, line: line)
-    }
-    
-    private func pushContainer(
-        with value: Any, file: StaticString = #file, line: UInt = #line) {
-        
-        assertCanEncodeNewValue(file: file, line: line)
-        encoder.storage.pushContainer(AnyContainer(object: value))
-    }
-    
     func encode(_ value: Bool) throws { pushContainer(with: value) }
     func encode(_ value: Int) throws { pushContainer(with: value) }
     func encode(_ value: Int8) throws { pushContainer(with: value) }
@@ -41,5 +27,17 @@ internal class SingleValueObjectEncodingContanier: SingleValueEncodingContainer 
     func encodeNil() throws { pushContainer(with: encoder.nilEncodingStrategy.nilValue) }
     func encode<T: Encodable>(_ value: T) throws {
         pushContainer(with: try encoder.box(value))
+    }
+
+    private func pushContainer(with value: Any, file: StaticString = #file, line: UInt = #line) {
+        assertCanEncodeNewValue(file: file, line: line)
+        encoder.storage.pushContainer(AnyContainer(object: value))
+    }
+    
+    private func assertCanEncodeNewValue(file: StaticString = #file, line: UInt = #line) {
+        precondition(encoder.canEncodeNewValue, """
+            Attempt to encode value through single value container \
+            when previously value already encoded.
+            """, file: file, line: line)
     }
 }

@@ -66,13 +66,14 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
     }
     
     func superEncoder() -> Encoder {
-        let key = ObjectKey.superKey
-        return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath, key: key,
-            completion: { [container] in container.set($0, for: key) })
+        return makeSuperEncoder(key: ObjectKey.superKey)
     }
     
     func superEncoder(forKey key: Key) -> Encoder {
+        return makeSuperEncoder(key: key)
+    }
+    
+    private func makeSuperEncoder(key: CodingKey) -> Encoder {
         return ReferencingEncoder(
             referenceCodingPath: encoder.codingPath, key: key,
             completion: { [container] in container.set($0, for: key) })

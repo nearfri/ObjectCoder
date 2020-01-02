@@ -9,7 +9,7 @@ internal class DictionaryContainer: ObjectContainer {
     
     var object: Any { return dictionary }
     
-    func set<Key: CodingKey>(_ value: Any, for key: Key) {
+    func set(_ value: Any, for key: CodingKey) {
         dictionary[key.stringValue] = value
     }
 }

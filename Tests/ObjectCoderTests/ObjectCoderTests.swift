@@ -756,25 +756,19 @@ class ObjectCoderTests: XCTestCase {
     
     // MARK: - Encoder Features
     
-    func testNestedContainerCodingPaths() {
+    func testNestedContainerEncodingPaths() {
         let encoder = ObjectEncoder()
-        do {
-            _ = try encoder.encode(NestedContainersTestType(testSuperEncoder: false))
-        } catch {
-            XCTFail("Caught error during encoding nested container types: \(error)")
-        }
+        XCTAssertNoThrow(try encoder.encode(NestedEncodingTestContainer(testSuperEncoder: false)),
+                         "Caught error during encoding nested container types")
     }
     
-    func testSuperEncoderCodingPaths() {
+    func testNestedContainerSuperEncodingPaths() {
         let encoder = ObjectEncoder()
-        do {
-            _ = try encoder.encode(NestedContainersTestType(testSuperEncoder: true))
-        } catch {
-            XCTFail("Caught error during encoding nested container types: \(error)")
-        }
+        XCTAssertNoThrow(try encoder.encode(NestedEncodingTestContainer(testSuperEncoder: true)),
+                         "Caught error during encoding nested container types")
     }
     
-    struct NestedContainersTestType: Encodable {
+    struct NestedEncodingTestContainer: Encodable {
         let testSuperEncoder: Bool
         
         init(testSuperEncoder: Bool) {
@@ -911,6 +905,191 @@ class ObjectCoderTests: XCTestCase {
             let thirdLevelContainerUnkeyed = secondLevelContainer.nestedUnkeyedContainer()
             expectEqualPaths(encoder.codingPath, baseCodingPath,
                              "Top-level Encoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "First-level keyed container's codingPath changed.")
+            expectEqualPaths(secondLevelContainer.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.b],
+                             "Second-level unkeyed container's codingPath changed.")
+            expectEqualPaths(thirdLevelContainerUnkeyed.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.b, ObjectKey(index: 1)],
+                             "New third-level unkeyed container had unexpected codingPath.")
+        }
+    }
+    
+    func testNestedContainerDecodingPaths() {
+        let decoder = ObjectDecoder()
+        decoder.userInfo[NestedDecodingTestContainer.testSuperDecoderKey] = false
+        let encoded = NestedDecodingTestContainer.encoded
+        XCTAssertNoThrow(try decoder.decode(NestedDecodingTestContainer.self, from: encoded),
+                         "Caught error during decoding nested container types")
+    }
+    
+    func testNestedContainerSuperDecodingPaths() {
+        let decoder = ObjectDecoder()
+        decoder.userInfo[NestedDecodingTestContainer.testSuperDecoderKey] = true
+        let encoded = NestedDecodingTestContainer.superEncoded
+        XCTAssertNoThrow(try decoder.decode(NestedDecodingTestContainer.self, from: encoded),
+                         "Caught error during decoding nested container types")
+    }
+    
+    struct NestedDecodingTestContainer: Decodable {
+        static let testSuperDecoderKey = CodingUserInfoKey(rawValue: "testSuperDecoder")!
+        
+        static let encoded: [String: Any] = [
+            "a": [
+                "one": ["foo": "bar"],
+                "two": [20]
+            ],
+            "b": [
+                ["foo": "bar"],
+                [20]
+            ]
+        ]
+        
+        static let superEncoded: [String: Any] = [
+            "a": [
+                "a": [
+                    "one": ["foo": "bar"],
+                    "two": [20]
+                ],
+                "b": [
+                    ["foo": "bar"],
+                    [20]
+                ]
+            ]
+        ]
+        
+        enum TopLevelCodingKeys: Int, CodingKey {
+            case a
+            case b
+            case c
+        }
+        
+        enum IntermediateCodingKeys: Int, CodingKey {
+            case one
+            case two
+        }
+        
+        init(from decoder: Decoder) throws {
+            let testSuperDecoder = (decoder.userInfo[Self.testSuperDecoderKey] as? Bool) ?? false
+            if testSuperDecoder {
+                let topLevelContainer = try decoder.container(keyedBy: TopLevelCodingKeys.self)
+                expectEqualPaths(decoder.codingPath, [],
+                                 "Top-level Decoder's codingPath changed.")
+                expectEqualPaths(topLevelContainer.codingPath, [],
+                                 "New first-level keyed container has non-empty codingPath.")
+                
+                let superDecoder = try topLevelContainer.superDecoder(forKey: .a)
+                expectEqualPaths(decoder.codingPath, [],
+                                 "Top-level Decoder's codingPath changed.")
+                expectEqualPaths(topLevelContainer.codingPath, [],
+                                 "First-level keyed container's codingPath changed.")
+                expectEqualPaths(superDecoder.codingPath, [TopLevelCodingKeys.a],
+                                 "New superDecoder had unexpected codingPath.")
+                try testNestedContainers(in: superDecoder, baseCodingPath: [TopLevelCodingKeys.a])
+            } else {
+                try testNestedContainers(in: decoder, baseCodingPath: [])
+            }
+        }
+        
+        private func testNestedContainers(in decoder: Decoder, baseCodingPath: [CodingKey]) throws {
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "New decoder has non-empty codingPath.")
+            
+            // codingPath should not change upon fetching a non-nested container.
+            let firstLevelContainer = try decoder.container(keyedBy: TopLevelCodingKeys.self)
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "New first-level keyed container has non-empty codingPath.")
+            
+            try testNestedKeyedContainer(firstLevelContainer: firstLevelContainer,
+                                         in: decoder,
+                                         baseCodingPath: baseCodingPath)
+            
+            try testNestedUnkeyedContainer(firstLevelContainer: firstLevelContainer,
+                                           in: decoder,
+                                           baseCodingPath: baseCodingPath)
+        }
+        
+        private func testNestedKeyedContainer(
+            firstLevelContainer: KeyedDecodingContainer<TopLevelCodingKeys>,
+            in decoder: Decoder,
+            baseCodingPath: [CodingKey]) throws {
+            
+            // Nested container for key should have a new key pushed on.
+            let secondLevelContainer = try firstLevelContainer.nestedContainer(
+                keyedBy: IntermediateCodingKeys.self, forKey: .a)
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "First-level keyed container's codingPath changed.")
+            expectEqualPaths(secondLevelContainer.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.a],
+                             "New second-level keyed container had unexpected codingPath.")
+            
+            // Inserting a keyed container should not change existing coding paths.
+            let thirdLevelContainerKeyed = try secondLevelContainer.nestedContainer(
+                keyedBy: IntermediateCodingKeys.self, forKey: .one)
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "First-level keyed container's codingPath changed.")
+            expectEqualPaths(secondLevelContainer.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.a],
+                             "Second-level keyed container's codingPath changed.")
+            expectEqualPaths(thirdLevelContainerKeyed.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.a, IntermediateCodingKeys.one],
+                             "New third-level keyed container had unexpected codingPath.")
+            
+            // Inserting an unkeyed container should not change existing coding paths.
+            let thirdLevelContainerUnkeyed = try secondLevelContainer.nestedUnkeyedContainer(
+                forKey: .two)
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "First-level keyed container's codingPath changed.")
+            expectEqualPaths(secondLevelContainer.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.a],
+                             "Second-level keyed container's codingPath changed.")
+            expectEqualPaths(thirdLevelContainerUnkeyed.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.a, IntermediateCodingKeys.two],
+                             "New third-level unkeyed container had unexpected codingPath.")
+        }
+        
+        private func testNestedUnkeyedContainer(
+            firstLevelContainer: KeyedDecodingContainer<TopLevelCodingKeys>,
+            in decoder: Decoder,
+            baseCodingPath: [CodingKey]) throws {
+            
+            // Nested container for key should have a new key pushed on.
+            var secondLevelContainer = try firstLevelContainer.nestedUnkeyedContainer(forKey: .b)
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "First-level keyed container's codingPath changed.")
+            expectEqualPaths(secondLevelContainer.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.b],
+                             "New second-level keyed container had unexpected codingPath.")
+            
+            // Appending a keyed container should not change existing coding paths.
+            let thirdLevelContainerKeyed = try secondLevelContainer.nestedContainer(
+                keyedBy: IntermediateCodingKeys.self)
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
+            expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
+                             "First-level keyed container's codingPath changed.")
+            expectEqualPaths(secondLevelContainer.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.b],
+                             "Second-level unkeyed container's codingPath changed.")
+            expectEqualPaths(thirdLevelContainerKeyed.codingPath,
+                             baseCodingPath + [TopLevelCodingKeys.b, ObjectKey(index: 0)],
+                             "New third-level keyed container had unexpected codingPath.")
+            
+            // Appending an unkeyed container should not change existing coding paths.
+            let thirdLevelContainerUnkeyed = try secondLevelContainer.nestedUnkeyedContainer()
+            expectEqualPaths(decoder.codingPath, baseCodingPath,
+                             "Top-level Decoder's codingPath changed.")
             expectEqualPaths(firstLevelContainer.codingPath, baseCodingPath,
                              "First-level keyed container's codingPath changed.")
             expectEqualPaths(secondLevelContainer.codingPath,

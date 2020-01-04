@@ -1,6 +1,12 @@
 import Foundation
 
 internal enum Errors {
+    static func topLevelDidNotEncode(topLevel value: Any) -> EncodingError {
+        let desc = "Top-level \(type(of: value)) did not encode any values."
+        let context = EncodingError.Context(codingPath: [], debugDescription: desc)
+        return EncodingError.invalidValue(value, context)
+    }
+    
     static func keyNotFound(codingPath: [CodingKey], key: CodingKey) -> DecodingError {
         let desc = "No value associated with key \(key) (\"\(key.stringValue)\")."
         let context = DecodingError.Context(codingPath: codingPath, debugDescription: desc)

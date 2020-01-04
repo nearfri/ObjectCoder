@@ -20,7 +20,7 @@ public class ObjectEncoder: Encoder {
     
     public func encode<T: Encodable>(_ value: T) throws -> Any {
         defer { cleanup() }
-        return try box(value)
+        return try boxTopLevel(value)
     }
     
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
@@ -68,18 +68,27 @@ extension ObjectEncoder {
         storage.removeAll()
     }
     
+    private func boxTopLevel<T: Encodable>(_ value: T) throws -> Any {
+        if isPassthroughType(T.self) {
+            return value
+        }
+        let throwError = { throw Errors.topLevelDidNotEncode(topLevel: value) }
+        return try boxValue(value, whenNoResult: throwError)
+    }
+    
     internal func box<T: Encodable>(_ value: T) throws -> Any {
         if isPassthroughType(T.self) {
             return value
         }
-        return try boxValue(value)
+        let returnEmptyDictionary = { [:] as [String: Any] }
+        return try boxValue(value, whenNoResult: returnEmptyDictionary)
     }
     
     private func isPassthroughType(_ type: Encodable.Type) -> Bool {
         return passthroughTypes.contains(where: { type == $0 })
     }
     
-    private func boxValue(_ value: Encodable) throws -> Any {
+    private func boxValue<T: Encodable>(_ value: T, whenNoResult: () throws -> Any) throws -> Any {
         let depth = storage.count
         do {
             try value.encode(to: self)
@@ -91,7 +100,7 @@ extension ObjectEncoder {
         }
         
         guard storage.count > depth else {
-            return [:] as [String: Any]
+            return try whenNoResult()
         }
         return storage.popContainer().object
     }

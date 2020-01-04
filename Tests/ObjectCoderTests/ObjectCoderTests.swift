@@ -734,6 +734,26 @@ class ObjectCoderTests: XCTestCase {
         let countersByStr: [String: Counter?]
     }
     
+    // MARK: - Encoding Nothing
+    
+    func testEncodingTopLevelNothing() {
+        let encoder = ObjectEncoder()
+        let value = NothingStruct()
+        XCTAssertThrowsError(try encoder.encode(value))
+    }
+    
+    func testEncodingIntermediateNothing() {
+        let encoder = ObjectEncoder()
+        let value = [NothingStruct()]
+        XCTAssertNoThrow(try encoder.encode(value))
+    }
+    
+    private struct NothingStruct: Codable, Equatable {
+        func encode(to encoder: Encoder) throws {
+            // Encode nothing
+        }
+    }
+    
     // MARK: - Encoder Features
     
     func testNestedContainerCodingPaths() {

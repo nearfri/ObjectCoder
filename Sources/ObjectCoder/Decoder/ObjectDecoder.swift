@@ -89,19 +89,3 @@ extension ObjectDecoder {
         return passthroughTypes.contains(where: { type == $0 })
     }
 }
-
-extension ObjectDecoder {
-    // ObjectEncoder.encodeValue()와 마찬가지 이유로 type-erased 구현은 공개하지 않는다.
-    private func decodeValue(of type: Decodable.Type, from object: Any) throws -> Any {
-        defer { cleanup() }
-        
-        if Swift.type(of: object) == type, isPassthroughType(type) {
-            return object
-        }
-        
-        storage.pushContainer(object)
-        defer { storage.popContainer() }
-        
-        return try type.init(from: self)
-    }
-}

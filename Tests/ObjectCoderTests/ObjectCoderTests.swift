@@ -1262,6 +1262,68 @@ class ObjectCoderTests: XCTestCase {
                       nilEncodingStrategy: nilStrategy, nilDecodingStrategy: nilStrategy)
     }
     
+    func testSuperDecoderFromUnkeyedContainer() throws {
+        struct UnkeyedTestContainer: Decodable, Equatable {
+            var points: Int
+            var name: String
+            
+            init(points: Int, name: String) {
+                self.points = points
+                self.name = name
+            }
+            
+            init(from decoder: Decoder) throws {
+                var container = try decoder.unkeyedContainer()
+                
+                let superDecoder = try container.superDecoder()
+                var superContainer = try superDecoder.unkeyedContainer()
+                points = try superContainer.decode(Int.self)
+                
+                name = try container.decode(String.self)
+            }
+        }
+        
+        let expected = UnkeyedTestContainer(points: 3, name: "Hello")
+        let encoded: [Any] = [[3], "Hello"]
+        let decoder = ObjectDecoder()
+        let decoded = try decoder.decode(UnkeyedTestContainer.self, from: encoded)
+        XCTAssertEqual(decoded, expected)
+    }
+    
+    func testDecodingNilFromUnkeyedContainer() throws {
+        struct UnkeyedTestContainer: Decodable, Equatable {
+            var hasNil: Bool
+            var name: String
+            
+            init(from decoder: Decoder) throws {
+                var container = try decoder.unkeyedContainer()
+                hasNil = try container.decodeNil()
+                name = try container.decode(String.self)
+            }
+        }
+        
+        let encoded: [Any] = [NSNull(), "Hello"]
+        let decoder = ObjectDecoder()
+        decoder.nilDecodingStrategy = .null
+        let decoded = try decoder.decode(UnkeyedTestContainer.self, from: encoded)
+        XCTAssertEqual(decoded.hasNil, true)
+        XCTAssertEqual(decoded.name, "Hello")
+    }
+    
+    func testDecoderStateThrowOnAccessAfterEnd() {
+        struct UnkeyedTestContainer: Decodable, Equatable {
+            init(from decoder: Decoder) throws {
+                var container = try decoder.unkeyedContainer()
+                _ = try container.decode(Int.self)
+                _ = try container.decode(Int.self)
+            }
+        }
+        
+        let decoder = ObjectDecoder()
+        XCTAssertNoThrow(try decoder.decode(UnkeyedTestContainer.self, from: [1, 2]))
+        XCTAssertThrowsError(try decoder.decode(UnkeyedTestContainer.self, from: [1]))
+    }
+    
     // MARK: - Performance
     
     func testPerformanceSeed() {

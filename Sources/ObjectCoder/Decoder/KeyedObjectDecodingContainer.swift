@@ -121,11 +121,8 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         let nestedCodingPath = codingPath + [key]
         
         guard let value = container[key.stringValue] else {
-            let desc = "Cannot get nested keyed container -- "
-                + "no value found for key \"\(key.stringValue)\"."
-            let context = DecodingError.Context(codingPath: nestedCodingPath,
-                                                debugDescription: desc)
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self, context)
+            throw KeyedContainerErrors.nestedContainerNotFound(
+                codingPath: nestedCodingPath, key: key, keyType: type)
         }
         
         guard let dictionary = value as? [String: Any] else {
@@ -142,11 +139,8 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         let nestedCodingPath = codingPath + [key]
         
         guard let value = container[key.stringValue] else {
-            let desc = "Cannot get nested unkeyed container -- "
-                + "no value found for key \"\(key.stringValue)\"."
-            let context = DecodingError.Context(codingPath: nestedCodingPath,
-                                                debugDescription: desc)
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self, context)
+            throw KeyedContainerErrors.nestedUnkeyedContainerNotFound(
+                codingPath: nestedCodingPath, key: key)
         }
         
         guard let array = value as? [Any] else {

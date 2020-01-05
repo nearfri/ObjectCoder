@@ -138,10 +138,8 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         let nestedCodingPath = codingPath + [ObjectKey(index: currentIndex)]
         
         guard !isAtEnd else {
-            let desc = "Cannot get nested keyed container -- unkeyed container is at end."
-            let context = DecodingError.Context(codingPath: nestedCodingPath,
-                                                debugDescription: desc)
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self, context)
+            throw UnkeyedContainerErrors.nestedContainerNotFound(
+                codingPath: nestedCodingPath, keyType: type)
         }
         
         let value = container[currentIndex]
@@ -161,10 +159,8 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         let nestedCodingPath = codingPath + [ObjectKey(index: currentIndex)]
         
         guard !isAtEnd else {
-            let desc = "Cannot get nested unkeyed container -- unkeyed container is at end."
-            let context = DecodingError.Context(codingPath: nestedCodingPath,
-                                                debugDescription: desc)
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self, context)
+            throw UnkeyedContainerErrors.nestedUnkeyedContainerNotFound(
+                codingPath: nestedCodingPath)
         }
         
         let value = container[currentIndex]
@@ -183,10 +179,7 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         let superCodingPath = codingPath + [ObjectKey(index: currentIndex)]
         
         guard !isAtEnd else {
-            let desc = "Cannot get superDecoder() -- unkeyed container is at end."
-            let context = DecodingError.Context(codingPath: superCodingPath,
-                                                debugDescription: desc)
-            throw DecodingError.valueNotFound(Decoder.self, context)
+            throw UnkeyedContainerErrors.superDecoderNotFound(codingPath: superCodingPath)
         }
         
         let value = container[currentIndex]

@@ -1,4 +1,5 @@
 import XCTest
+import CwlPreconditionTesting
 @testable import ObjectCoder
 
 // ref.: https://github.com/apple/swift/blob/master/test/stdlib/TestPlistEncoder.swift
@@ -23,6 +24,20 @@ class ObjectCoderTests: XCTestCase {
     
     private var emptyDictionary: [String: String] {
         return [:]
+    }
+    
+    private func testEncodeFailure<T: Encodable>(
+        of value: T,
+        file: StaticString = #file,
+        line: UInt = #line) {
+        
+        _ = catchBadInstruction {
+            do {
+                _ = try ObjectEncoder().encode(value)
+                XCTFail("Encode of top-level \(T.self) was expected to fail.",
+                    file: file, line: line)
+            } catch {}
+        }
     }
     
     private func testRoundTrip<T, U>(
@@ -625,6 +640,105 @@ class ObjectCoderTests: XCTestCase {
             case .fileNotFound: try container.encodeNil()
             }
         }
+    }
+    
+    func testEncodingMultipleNestedContainersWithTheSameTopLevelKey() {
+        struct Model: Codable, Equatable {
+            let first: String
+            let second: String
+            
+            init(from coder: Decoder) throws {
+                let container = try coder.container(keyedBy: TopLevelCodingKeys.self)
+                
+                let firstNestedContainer = try container.nestedContainer(
+                    keyedBy: FirstNestedCodingKeys.self, forKey: .top)
+                self.first = try firstNestedContainer.decode(String.self, forKey: .first)
+                
+                let secondNestedContainer = try container.nestedContainer(
+                    keyedBy: SecondNestedCodingKeys.self, forKey: .top)
+                self.second = try secondNestedContainer.decode(String.self, forKey: .second)
+            }
+            
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: TopLevelCodingKeys.self)
+                
+                var firstNestedContainer = container.nestedContainer(
+                    keyedBy: FirstNestedCodingKeys.self, forKey: .top)
+                try firstNestedContainer.encode(self.first, forKey: .first)
+                
+                var secondNestedContainer = container.nestedContainer(
+                    keyedBy: SecondNestedCodingKeys.self, forKey: .top)
+                try secondNestedContainer.encode(self.second, forKey: .second)
+            }
+            
+            init(first: String, second: String) {
+                self.first = first
+                self.second = second
+            }
+            
+            static var testValue: Model {
+                return Model(first: "Johnny Appleseed",
+                             second: "appleseed@apple.com")
+            }
+            
+            enum TopLevelCodingKeys : String, CodingKey {
+                case top
+            }
+            
+            enum FirstNestedCodingKeys : String, CodingKey {
+                case first
+            }
+            enum SecondNestedCodingKeys : String, CodingKey {
+                case second
+            }
+        }
+        
+        let expectedValue = [
+            "top": [
+                "first": "Johnny Appleseed",
+                "second": "appleseed@apple.com"
+            ]
+        ]
+        testRoundTrip(of: Model.testValue, expectedEncodedValue: expectedValue)
+    }
+    
+    func testEncodingConflictedTypeNestedContainersWithTheSameTopLevelKey() {
+        struct Model : Encodable, Equatable {
+            let first: String
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: TopLevelCodingKeys.self)
+
+                var firstNestedContainer = container.nestedContainer(
+                    keyedBy: FirstNestedCodingKeys.self, forKey: .top)
+                try firstNestedContainer.encode(self.first, forKey: .first)
+
+                // The following line would fail as it attempts to re-encode into
+                // already encoded container is invalid. This will always fail
+                var secondNestedContainer = container.nestedUnkeyedContainer(forKey: .top)
+                try secondNestedContainer.encode("second")
+            }
+
+            init(first: String) {
+                self.first = first
+            }
+
+            static var testValue: Model {
+                return Model(first: "Johnny Appleseed")
+            }
+            
+            enum TopLevelCodingKeys : String, CodingKey {
+                case top
+            }
+
+            enum FirstNestedCodingKeys : String, CodingKey {
+                case first
+            }
+        }
+        
+        // This following test would fail as it attempts to re-encode into
+        // already encoded container is invalid. This will always fail
+        testEncodeFailure(of: Model.testValue)
     }
     
     // MARK: - Encoding Optional Types

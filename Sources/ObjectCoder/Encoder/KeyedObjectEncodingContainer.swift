@@ -3,6 +3,7 @@ import Foundation
 internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
     private let encoder: ObjectEncoder
     private let container: DictionaryContainer
+    private var nestedContainers: [String: ObjectContainer] = [:]
     private let completion: (_ object: Any) -> Void
     
     let codingPath: [CodingKey]
@@ -52,17 +53,53 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
         let keyedContainer = KeyedObjectEncodingContainer<NestedKey>(
             referencing: encoder,
             codingPath: codingPath + [key],
-            container: DictionaryContainer(),
+            container: dictionaryContainer(forKey: key),
             completion: { [container] in container.set($0, for: key) })
         return KeyedEncodingContainer(keyedContainer)
+    }
+    
+    private func dictionaryContainer(forKey key: Key) -> DictionaryContainer {
+        let containerKey = key.stringValue
+        
+        if let existingContainer = nestedContainers[containerKey] {
+            if let result = existingContainer as? DictionaryContainer {
+                return result
+            }
+            
+            preconditionFailure("Attempt to re-encode into nested "
+                + "KeyedEncodingContainer<\(Key.self)> for key \"\(containerKey)\" is invalid: "
+                + "non-keyed container already encoded for this key.")
+        }
+        
+        let result = DictionaryContainer()
+        nestedContainers[containerKey] = result
+        return result
     }
     
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
         return UnkeyedObjectEncodingContanier(
             referencing: encoder,
             codingPath: codingPath + [key],
-            container: ArrayContainer(),
+            container: arrayContainer(forKey: key),
             completion: { [container] in container.set($0, for: key) })
+    }
+    
+    private func arrayContainer(forKey key: Key) -> ArrayContainer {
+        let containerKey = key.stringValue
+        
+        if let existingContainer = nestedContainers[containerKey] {
+            if let result = existingContainer as? ArrayContainer {
+                return result
+            }
+            
+            preconditionFailure("Attempt to re-encode into nested "
+                + "UnkeyedEncodingContainer for key \"\(containerKey)\" is invalid: "
+                + "keyed container/single value already encoded for this key.")
+        }
+        
+        let result = ArrayContainer()
+        nestedContainers[containerKey] = result
+        return result
     }
     
     func superEncoder() -> Encoder {

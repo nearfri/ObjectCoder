@@ -159,14 +159,7 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
     
     private func makeSuperDecoder(key: CodingKey) throws -> Decoder {
         let superCodingPath = codingPath + [key]
-        
-        guard let value = container[key.stringValue] else {
-            let desc = "Cannot get superDecoder() -- "
-                + "no value found for key \"\(key.stringValue)\"."
-            let context = DecodingError.Context(codingPath: superCodingPath,
-                                                debugDescription: desc)
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self, context)
-        }
+        let value = container[key.stringValue] ?? decoder.nilDecodingStrategy.nilValue
         return ObjectDecoder(codingPath: superCodingPath,
                              container: value,
                              options: decoder.options)

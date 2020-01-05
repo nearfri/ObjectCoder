@@ -39,6 +39,7 @@ internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
     func encode(_ value: Float) throws { container.append(value) }
     func encode(_ value: Double) throws { container.append(value) }
     func encode(_ value: String) throws { container.append(value) }
+    
     func encodeNil() throws { container.append(encoder.nilEncodingStrategy.nilValue) }
     
     func encode<T: Encodable>(_ value: T) throws {
@@ -77,7 +78,9 @@ internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
         container.append("placeholder for superEncoder")
         
         return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath, key: ObjectKey(index: index),
+            referenceCodingPath: encoder.codingPath,
+            key: ObjectKey(index: index),
+            options: encoder.options,
             completion: { [container] in container.replace(at: index, with: $0) })
     }
 }

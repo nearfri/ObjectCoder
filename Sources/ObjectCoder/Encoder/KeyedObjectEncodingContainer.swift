@@ -36,6 +36,7 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
     func encode(_ value: Float, forKey key: Key) throws { container.set(value, for: key) }
     func encode(_ value: Double, forKey key: Key) throws { container.set(value, for: key) }
     func encode(_ value: String, forKey key: Key) throws { container.set(value, for: key) }
+    
     func encodeNil(forKey key: Key) throws {
         container.set(encoder.nilEncodingStrategy.nilValue, for: key)
     }
@@ -112,7 +113,9 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
     
     private func makeSuperEncoder(key: CodingKey) -> Encoder {
         return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath, key: key,
+            referenceCodingPath: encoder.codingPath,
+            key: key,
+            options: encoder.options,
             completion: { [container] in container.set($0, for: key) })
     }
 }

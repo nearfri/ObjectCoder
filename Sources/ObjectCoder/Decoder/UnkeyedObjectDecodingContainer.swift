@@ -186,6 +186,8 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         
         currentIndex += 1
         
-        return ObjectDecoder(codingPath: superCodingPath, container: value)
+        return ObjectDecoder(codingPath: superCodingPath,
+                             container: value,
+                             options: decoder.options)
     }
 }

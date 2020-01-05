@@ -24,10 +24,7 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
     
     func decodeNil(forKey key: Key) throws -> Bool {
         let value = try self.value(forKey: key)
-        if decoder.nilDecodingStrategy.isNilValue(value) {
-            return true
-        }
-        return false
+        return decoder.nilDecodingStrategy.isNilValue(value)
     }
     
     func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
@@ -170,6 +167,8 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
                                                 debugDescription: desc)
             throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self, context)
         }
-        return ObjectDecoder(codingPath: superCodingPath, container: value)
+        return ObjectDecoder(codingPath: superCodingPath,
+                             container: value,
+                             options: decoder.options)
     }
 }

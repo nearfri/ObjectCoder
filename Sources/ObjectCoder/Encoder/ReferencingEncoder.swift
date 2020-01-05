@@ -4,12 +4,12 @@ internal class ReferencingEncoder: ObjectEncoder {
     private let referenceCodingPath: [CodingKey]
     private let completion: (_ encodedObject: Any) -> Void
     
-    init(referenceCodingPath: [CodingKey], key: CodingKey,
+    init(referenceCodingPath: [CodingKey], key: CodingKey, options: Options,
          completion: @escaping (_ encodedObject: Any) -> Void) {
         
         self.referenceCodingPath = referenceCodingPath
         self.completion = completion
-        super.init(codingPath: referenceCodingPath + [key])
+        super.init(codingPath: referenceCodingPath + [key], options: options)
     }
     
     deinit {

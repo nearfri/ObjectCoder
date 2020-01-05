@@ -13,19 +13,6 @@ class ObjectCoderTests: XCTestCase {
         super.tearDown()
     }
     
-    // MARK: - Encoding Top-Level Empty Types
-    
-    func testEncodingTopLevelEmptyStruct() {
-        let empty = EmptyStruct()
-        testRoundTrip(of: empty, expectedEncodedValue: emptyDictionary)
-    }
-    
-    private struct EmptyStruct: Codable, Equatable {}
-    
-    private var emptyDictionary: [String: String] {
-        return [:]
-    }
-    
     private func testEncodeFailure<T: Encodable>(
         of value: T,
         file: StaticString = #file,
@@ -84,9 +71,18 @@ class ObjectCoderTests: XCTestCase {
         }
     }
     
+    // MARK: - Encoding Top-Level Empty Types
+    
+    func testEncodingTopLevelEmptyStruct() {
+        let empty = EmptyStruct()
+        testRoundTrip(of: empty, expectedEncodedValue: [:] as [String: String])
+    }
+    
+    private struct EmptyStruct: Codable, Equatable {}
+    
     func testEncodingTopLevelEmptyClass() {
         let empty = EmptyClass()
-        testRoundTrip(of: empty, expectedEncodedValue: emptyDictionary)
+        testRoundTrip(of: empty, expectedEncodedValue: [:] as [String: String])
     }
     
     private class EmptyClass: Codable, Equatable {
@@ -152,6 +148,22 @@ class ObjectCoderTests: XCTestCase {
         let nilValue: Int? = nil
         let nilSymbol = NilEncodingStrategy.defaultNilSymbol
         testRoundTrip(of: nilValue, expectedEncodedValue: nilSymbol)
+    }
+    
+    func testDecodingTopLevelNil() {
+        do {
+            let decoder = ObjectDecoder()
+            let nilSymbol = NilEncodingStrategy.defaultNilSymbol
+            decoder.nilDecodingStrategy = .symbol(nilSymbol)
+            
+            let helloString = try decoder.decode(String?.self, from: "Hello")
+            XCTAssertEqual(helloString, "Hello")
+            
+            let nilString = try decoder.decode(String?.self, from: nilSymbol)
+            XCTAssertNil(nilString)
+        } catch {
+            XCTFail("Failed to decode: \(error)")
+        }
     }
     
     func testEncodingTopLevelURL() {

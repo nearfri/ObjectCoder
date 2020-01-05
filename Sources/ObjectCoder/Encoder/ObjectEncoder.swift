@@ -14,8 +14,12 @@ public class ObjectEncoder: Encoder {
         self.codingPath = []
     }
     
-    internal init(codingPath: [CodingKey]) {
+    internal init(codingPath: [CodingKey], options: Options) {
         self.codingPath = codingPath
+        
+        self.userInfo = options.userInfo
+        self.nilEncodingStrategy = options.nilEncodingStrategy
+        self.passthroughTypes = options.passthroughTypes
     }
     
     public func encode<T: Encodable>(_ value: T) throws -> Any {
@@ -103,5 +107,19 @@ extension ObjectEncoder {
             return try whenNoResult()
         }
         return storage.popContainer().object
+    }
+}
+
+extension ObjectEncoder {
+    internal struct Options {
+        var userInfo: [CodingUserInfoKey: Any]
+        var nilEncodingStrategy: NilEncodingStrategy
+        var passthroughTypes: [Encodable.Type]
+    }
+    
+    internal var options: Options {
+        return Options(userInfo: userInfo,
+                       nilEncodingStrategy: nilEncodingStrategy,
+                       passthroughTypes: passthroughTypes)
     }
 }

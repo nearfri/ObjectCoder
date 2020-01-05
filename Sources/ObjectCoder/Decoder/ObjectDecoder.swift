@@ -14,9 +14,13 @@ public class ObjectDecoder: Decoder {
         self.codingPath = []
     }
     
-    internal init(codingPath: [CodingKey], container: Any) {
+    internal init(codingPath: [CodingKey], container: Any, options: Options) {
         self.codingPath = codingPath
         self.storage.pushContainer(container)
+        
+        self.userInfo = options.userInfo
+        self.nilDecodingStrategy = options.nilDecodingStrategy
+        self.passthroughTypes = options.passthroughTypes
     }
     
     public func decode<T: Decodable>(_ type: T.Type, from value: Any) throws -> T {
@@ -87,5 +91,19 @@ extension ObjectDecoder {
     
     private func isPassthroughType(_ type: Decodable.Type) -> Bool {
         return passthroughTypes.contains(where: { type == $0 })
+    }
+}
+
+extension ObjectDecoder {
+    internal struct Options {
+        var userInfo: [CodingUserInfoKey: Any] = [:]
+        var nilDecodingStrategy: NilDecodingStrategy = .default
+        var passthroughTypes: [Decodable.Type] = [Data.self, Date.self]
+    }
+    
+    internal var options: Options {
+        return Options(userInfo: userInfo,
+                       nilDecodingStrategy: nilDecodingStrategy,
+                       passthroughTypes: passthroughTypes)
     }
 }

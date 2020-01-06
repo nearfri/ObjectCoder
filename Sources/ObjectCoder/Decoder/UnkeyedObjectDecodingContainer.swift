@@ -109,7 +109,7 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
     }
     
     private func makeEndOfContainerError(expectation: Any.Type) -> DecodingError {
-        let currentCodingPath = decoder.codingPath + [ObjectKey(index: currentIndex)]
+        let currentCodingPath = codingPath + [ObjectKey(index: currentIndex)]
         let context = DecodingError.Context(codingPath: currentCodingPath,
                                             debugDescription: "Unkeyed container is at end.")
         return DecodingError.valueNotFound(expectation, context)
@@ -123,10 +123,10 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         let key = ObjectKey(index: currentIndex)
         let value = container[currentIndex]
         if decoder.nilDecodingStrategy.isNilValue(value) {
-            throw Errors.valueNotFound(codingPath: decoder.codingPath + [key], expectation: type)
+            throw Errors.valueNotFound(codingPath: codingPath + [key], expectation: type)
         }
         
-        let decodedValue = try type.init(value: value, codingPath: decoder.codingPath + [key])
+        let decodedValue = try type.init(value: value, codingPath: codingPath + [key])
         currentIndex += 1
         
         return decodedValue

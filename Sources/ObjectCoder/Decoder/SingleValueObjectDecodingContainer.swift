@@ -78,8 +78,8 @@ internal struct SingleValueObjectDecodingContainer: SingleValueDecodingContainer
     private func decodeValue<T: InitializableWithAny>(type: T.Type) throws -> T {
         let value = decoder.storage.topContainer
         if decoder.nilDecodingStrategy.isNilValue(value) {
-            throw Errors.valueNotFound(codingPath: decoder.codingPath, expectation: type)
+            throw Errors.valueNotFound(codingPath: codingPath, expectation: type)
         }
-        return try type.init(value: value, codingPath: decoder.codingPath)
+        return try type.init(value: value, codingPath: codingPath)
     }
 }

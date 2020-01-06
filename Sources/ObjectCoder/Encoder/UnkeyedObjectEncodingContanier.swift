@@ -78,7 +78,7 @@ internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
         container.append("placeholder for superEncoder")
         
         return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath,
+            referenceCodingPath: codingPath,
             key: ObjectKey(index: index),
             options: encoder.options,
             completion: { [container] in container.replace(at: index, with: $0) })

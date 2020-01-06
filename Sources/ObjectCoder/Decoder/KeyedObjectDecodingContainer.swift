@@ -94,8 +94,7 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
     
     private func value(forKey key: Key) throws -> Any {
         guard let result = container[key.stringValue] else {
-            // Error의 codingPath는 container가 아니라 decoder의 것으로 한다.
-            throw Errors.keyNotFound(codingPath: decoder.codingPath, key: key)
+            throw Errors.keyNotFound(codingPath: codingPath, key: key)
         }
         return result
     }
@@ -105,10 +104,10 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         
         let value = try self.value(forKey: key)
         if decoder.nilDecodingStrategy.isNilValue(value) {
-            throw Errors.valueNotFound(codingPath: decoder.codingPath + [key], expectation: type)
+            throw Errors.valueNotFound(codingPath: codingPath + [key], expectation: type)
         }
         
-        return try type.init(value: value, codingPath: decoder.codingPath + [key])
+        return try type.init(value: value, codingPath: codingPath + [key])
     }
     
     func nestedContainer<NestedKey: CodingKey>(

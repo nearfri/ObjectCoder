@@ -113,7 +113,7 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
     
     private func makeSuperEncoder(key: CodingKey) -> Encoder {
         return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath,
+            referenceCodingPath: codingPath,
             key: key,
             options: encoder.options,
             completion: { [container] in container.set($0, for: key) })

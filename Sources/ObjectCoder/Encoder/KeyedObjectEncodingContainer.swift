@@ -42,8 +42,10 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
     }
     
     func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
-        encoder.codingPath.append(key)
-        defer { encoder.codingPath.removeLast() }
+        let encoderCodingPath = encoder.codingPath
+        encoder.codingPath = codingPath + [key]
+        defer { encoder.codingPath = encoderCodingPath }
+        
         container.set(try encoder.box(value), for: key)
     }
     
@@ -113,7 +115,7 @@ internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContai
     
     private func makeSuperEncoder(key: CodingKey) -> Encoder {
         return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath,
+            referenceCodingPath: codingPath,
             key: key,
             options: encoder.options,
             completion: { [container] in container.set($0, for: key) })

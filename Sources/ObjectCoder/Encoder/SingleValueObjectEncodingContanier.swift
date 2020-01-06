@@ -37,7 +37,7 @@ internal class SingleValueObjectEncodingContanier: SingleValueEncodingContainer 
     private func assertCanEncodeNewValue(file: StaticString = #file, line: UInt = #line) {
         precondition(encoder.canEncodeNewValue, """
             Attempt to encode value through single value container \
-            when previously value already encoded.
+            when previously value already encoded. codingPath: \(codingPath)
             """, file: file, line: line)
     }
 }

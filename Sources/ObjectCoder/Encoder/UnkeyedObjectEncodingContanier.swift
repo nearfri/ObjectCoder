@@ -43,8 +43,10 @@ internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
     func encodeNil() throws { container.append(encoder.nilEncodingStrategy.nilValue) }
     
     func encode<T: Encodable>(_ value: T) throws {
-        encoder.codingPath.append(ObjectKey(index: count))
-        defer { encoder.codingPath.removeLast() }
+        let encoderCodingPath = encoder.codingPath
+        encoder.codingPath = codingPath + [ObjectKey(index: count)]
+        defer { encoder.codingPath = encoderCodingPath }
+        
         container.append(try encoder.box(value))
     }
     
@@ -78,7 +80,7 @@ internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
         container.append("placeholder for superEncoder")
         
         return ReferencingEncoder(
-            referenceCodingPath: encoder.codingPath,
+            referenceCodingPath: codingPath,
             key: ObjectKey(index: index),
             options: encoder.options,
             completion: { [container] in container.replace(at: index, with: $0) })

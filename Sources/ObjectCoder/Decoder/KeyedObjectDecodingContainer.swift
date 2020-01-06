@@ -123,6 +123,9 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         }
         
         guard let dictionary = value as? [String: Any] else {
+            if decoder.nilDecodingStrategy.isNilValue(value) {
+                throw Errors.nilKeyedContainer(codingPath: nestedCodingPath, keyType: type)
+            }
             throw Errors.typeMismatch(codingPath: nestedCodingPath,
                                       expectation: [String: Any].self, reality: value)
         }
@@ -141,6 +144,9 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         }
         
         guard let array = value as? [Any] else {
+            if decoder.nilDecodingStrategy.isNilValue(value) {
+                throw Errors.nilUnkeyedContainer(codingPath: nestedCodingPath)
+            }
             throw Errors.typeMismatch(codingPath: nestedCodingPath,
                                       expectation: [Any].self, reality: value)
         }

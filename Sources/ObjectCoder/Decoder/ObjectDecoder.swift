@@ -38,9 +38,7 @@ public class ObjectDecoder: Decoder {
             return KeyedDecodingContainer(decodingContainer)
             
         case let topContainer where nilDecodingStrategy.isNilValue(topContainer):
-            let desc = "Cannot get keyed decoding container -- found nil value instead."
-            let context = DecodingError.Context(codingPath: codingPath, debugDescription: desc)
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<Key>.self, context)
+            throw Errors.nilKeyedContainer(codingPath: codingPath, keyType: type)
             
         default:
             throw Errors.typeMismatch(codingPath: codingPath,
@@ -56,9 +54,7 @@ public class ObjectDecoder: Decoder {
                 referencing: self, codingPath: codingPath, container: topContainer)
             
         case let topContainer where nilDecodingStrategy.isNilValue(topContainer):
-            let desc = "Cannot get unkeyed decoding container -- found nil value instead."
-            let context = DecodingError.Context(codingPath: codingPath, debugDescription: desc)
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self, context)
+            throw Errors.nilUnkeyedContainer(codingPath: codingPath)
             
         default:
             throw Errors.typeMismatch(codingPath: codingPath,

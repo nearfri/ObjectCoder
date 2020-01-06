@@ -39,6 +39,20 @@ internal enum Errors {
         let context = DecodingError.Context(codingPath: codingPath, debugDescription: desc)
         return DecodingError.dataCorrupted(context)
     }
+    
+    static func nilKeyedContainer<Key: CodingKey>(
+        codingPath: [CodingKey], keyType: Key.Type) -> DecodingError {
+        
+        let desc = "Cannot get keyed decoding container -- found nil value instead."
+        let context = DecodingError.Context(codingPath: codingPath, debugDescription: desc)
+        return DecodingError.valueNotFound(KeyedDecodingContainer<Key>.self, context)
+    }
+    
+    static func nilUnkeyedContainer(codingPath: [CodingKey]) -> DecodingError {
+        let desc = "Cannot get unkeyed decoding container -- found nil value instead."
+        let context = DecodingError.Context(codingPath: codingPath, debugDescription: desc)
+        return DecodingError.valueNotFound(UnkeyedDecodingContainer.self, context)
+    }
 }
 
 internal enum KeyedContainerErrors {

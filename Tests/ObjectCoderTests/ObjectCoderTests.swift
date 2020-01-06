@@ -1518,7 +1518,7 @@ class ObjectCoderTests: XCTestCase {
             struct SubModel: Codable {
                 func encode(to encoder: Encoder) throws {
                     let codingPath: [CodingKey] = [
-                        ObjectKey(index: 1), ObjectKey(index: 0)
+                        ObjectKey(index: 0), ObjectKey(index: 0)
                     ]
                     expectEqualPaths(encoder.codingPath, codingPath,
                                      "SubModel encoder's codingPath is invalid.")
@@ -1528,7 +1528,7 @@ class ObjectCoderTests: XCTestCase {
                 
                 init(from decoder: Decoder) throws {
                     let codingPath: [CodingKey] = [
-                        ObjectKey(index: 1), ObjectKey(index: 0)
+                        ObjectKey(index: 0), ObjectKey(index: 0)
                     ]
                     expectEqualPaths(decoder.codingPath, codingPath,
                                      "SubModel decoder's codingPath is invalid.")
@@ -1537,7 +1537,6 @@ class ObjectCoderTests: XCTestCase {
             
             func encode(to encoder: Encoder) throws {
                 var topLevelContainer = encoder.unkeyedContainer()
-                _ = topLevelContainer.nestedUnkeyedContainer()
                 var firstLevelContainer = topLevelContainer.nestedUnkeyedContainer()
                 try firstLevelContainer.encode(SubModel())
             }
@@ -1546,7 +1545,6 @@ class ObjectCoderTests: XCTestCase {
             
             init(from decoder: Decoder) throws {
                 var topLevelContainer = try decoder.unkeyedContainer()
-                _ = try topLevelContainer.nestedUnkeyedContainer()
                 var firstLevelContainer = try topLevelContainer.nestedUnkeyedContainer()
                 _ = try firstLevelContainer.decode(SubModel.self)
             }
@@ -1557,7 +1555,6 @@ class ObjectCoderTests: XCTestCase {
                          "Caught error during encoding unkeyed container")
         
         let testValue: [Any] = [
-            ["skip"],
             ["foo"]
         ]
         let decoder = ObjectDecoder()

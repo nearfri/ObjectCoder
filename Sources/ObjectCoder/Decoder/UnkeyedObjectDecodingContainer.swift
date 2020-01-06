@@ -98,8 +98,9 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
             throw makeEndOfContainerError(expectation: type)
         }
         
-        decoder.codingPath.append(ObjectKey(index: currentIndex))
-        defer { decoder.codingPath.removeLast() }
+        let decoderCodingPath = decoder.codingPath
+        decoder.codingPath = codingPath + [ObjectKey(index: currentIndex)]
+        defer { decoder.codingPath = decoderCodingPath }
         
         let value = container[currentIndex]
         let decodedValue = try decoder.unbox(value, as: type)

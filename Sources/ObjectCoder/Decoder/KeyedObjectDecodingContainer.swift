@@ -86,8 +86,9 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         let value = try self.value(forKey: key)
         
-        decoder.codingPath.append(key)
-        defer { decoder.codingPath.removeLast() }
+        let decoderCodingPath = decoder.codingPath
+        decoder.codingPath = codingPath + [key]
+        defer { decoder.codingPath = decoderCodingPath }
         
         return try decoder.unbox(value, as: type)
     }

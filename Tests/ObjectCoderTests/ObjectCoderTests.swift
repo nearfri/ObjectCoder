@@ -1450,6 +1450,121 @@ class ObjectCoderTests: XCTestCase {
         XCTAssertThrowsError(try decoder.decode(UnkeyedTestContainer.self, from: [1]))
     }
     
+    func testKeyedContainerCodingPath() {
+        struct Model: Codable {
+            enum TopLevelCodingKeys: Int, CodingKey {
+                case a
+                case b
+            }
+            
+            enum IntermediateCodingKeys: Int, CodingKey {
+                case one
+                case two
+            }
+            
+            struct SubModel: Codable {
+                func encode(to encoder: Encoder) throws {
+                    let codingPath: [CodingKey] = [
+                        TopLevelCodingKeys.a, IntermediateCodingKeys.one
+                    ]
+                    expectEqualPaths(encoder.codingPath, codingPath,
+                                     "SubModel encoder's codingPath is invalid.")
+                }
+                
+                init() {}
+                
+                init(from decoder: Decoder) throws {
+                    let codingPath: [CodingKey] = [
+                        TopLevelCodingKeys.a, IntermediateCodingKeys.one
+                    ]
+                    expectEqualPaths(decoder.codingPath, codingPath,
+                                     "SubModel decoder's codingPath is invalid.")
+                }
+            }
+            
+            func encode(to encoder: Encoder) throws {
+                var topLevelContainer = encoder.container(keyedBy: TopLevelCodingKeys.self)
+                var firstLevelContainer = topLevelContainer.nestedContainer(
+                    keyedBy: IntermediateCodingKeys.self, forKey: .a)
+                try firstLevelContainer.encode(SubModel(), forKey: .one)
+            }
+            
+            init() {}
+            
+            init(from decoder: Decoder) throws {
+                let topLevelContainer = try decoder.container(keyedBy: TopLevelCodingKeys.self)
+                let firstLevelContainer = try topLevelContainer.nestedContainer(
+                    keyedBy: IntermediateCodingKeys.self, forKey: .a)
+                _ = try firstLevelContainer.decode(SubModel.self, forKey: .one)
+            }
+        }
+        
+        let encoder = ObjectEncoder()
+        XCTAssertNoThrow(try encoder.encode(Model()),
+                         "Caught error during encoding keyed container.")
+        
+        let testValue: [String: Any] = [
+            "a": [
+                "one": "foo"
+            ]
+        ]
+        let decoder = ObjectDecoder()
+        XCTAssertNoThrow(try decoder.decode(Model.self, from: testValue),
+                         "Caught error during decoding keyed container.")
+    }
+    
+    func testUnkeyedContainerCodingPath() {
+        struct Model: Codable {
+            struct SubModel: Codable {
+                func encode(to encoder: Encoder) throws {
+                    let codingPath: [CodingKey] = [
+                        ObjectKey(index: 1), ObjectKey(index: 0)
+                    ]
+                    expectEqualPaths(encoder.codingPath, codingPath,
+                                     "SubModel encoder's codingPath is invalid.")
+                }
+                
+                init() {}
+                
+                init(from decoder: Decoder) throws {
+                    let codingPath: [CodingKey] = [
+                        ObjectKey(index: 1), ObjectKey(index: 0)
+                    ]
+                    expectEqualPaths(decoder.codingPath, codingPath,
+                                     "SubModel decoder's codingPath is invalid.")
+                }
+            }
+            
+            func encode(to encoder: Encoder) throws {
+                var topLevelContainer = encoder.unkeyedContainer()
+                _ = topLevelContainer.nestedUnkeyedContainer()
+                var firstLevelContainer = topLevelContainer.nestedUnkeyedContainer()
+                try firstLevelContainer.encode(SubModel())
+            }
+            
+            init() {}
+            
+            init(from decoder: Decoder) throws {
+                var topLevelContainer = try decoder.unkeyedContainer()
+                _ = try topLevelContainer.nestedUnkeyedContainer()
+                var firstLevelContainer = try topLevelContainer.nestedUnkeyedContainer()
+                _ = try firstLevelContainer.decode(SubModel.self)
+            }
+        }
+        
+        let encoder = ObjectEncoder()
+        XCTAssertNoThrow(try encoder.encode(Model()),
+                         "Caught error during encoding unkeyed container")
+        
+        let testValue: [Any] = [
+            ["skip"],
+            ["foo"]
+        ]
+        let decoder = ObjectDecoder()
+        XCTAssertNoThrow(try decoder.decode(Model.self, from: testValue),
+                         "Caught error during decoding unkeyed container")
+    }
+    
     // MARK: - Performance
     
     func testPerformanceSeed() {

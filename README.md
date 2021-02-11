@@ -1,6 +1,5 @@
 # ObjectCoder
-[![SwiftPM](https://github.com/nearfri/ObjectCoder/workflows/SwiftPM/badge.svg)](https://github.com/nearfri/ObjectCoder/actions?query=workflow%3ASwiftPM)
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![SwiftPM](https://github.com/nearfri/ObjectCoder/workflows/Swift/badge.svg)](https://github.com/nearfri/ObjectCoder/actions?query=workflow%3ASwift)
 
 
 Swift Object Encoder/Decoder compatible with UserDefaults

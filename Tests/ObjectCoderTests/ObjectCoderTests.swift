@@ -13,6 +13,7 @@ class ObjectCoderTests: XCTestCase {
         super.tearDown()
     }
     
+    #if (os(macOS) || os(iOS)) && arch(x86_64)
     private func testEncodeFailure<T: Encodable>(
         of value: T,
         file: StaticString = #file,
@@ -26,6 +27,7 @@ class ObjectCoderTests: XCTestCase {
             } catch {}
         }
     }
+    #endif
     
     private func testRoundTrip<T, U>(
         of value: T,
@@ -714,6 +716,7 @@ class ObjectCoderTests: XCTestCase {
         testRoundTrip(of: Model.testValue, expectedEncodedValue: expectedValue)
     }
     
+    #if (os(macOS) || os(iOS)) && arch(x86_64)
     func testEncodingConflictedTypeNestedContainersWithTheSameTopLevelKey() {
         struct Model : Encodable, Equatable {
             let first: String
@@ -752,6 +755,7 @@ class ObjectCoderTests: XCTestCase {
         // already encoded container is invalid. This will always fail
         testEncodeFailure(of: Model.testValue)
     }
+    #endif
     
     // MARK: - Encoding Optional Types
     

@@ -1,11 +1,11 @@
 import Foundation
 
 internal class SingleValueObjectEncodingContanier: SingleValueEncodingContainer {
-    private let encoder: ObjectEncoder
+    private let encoder: ObjectEncoderInternal
     
     let codingPath: [CodingKey]
     
-    init(referencing encoder: ObjectEncoder, codingPath: [CodingKey]) {
+    init(referencing encoder: ObjectEncoderInternal, codingPath: [CodingKey]) {
         self.encoder = encoder
         self.codingPath = codingPath
     }

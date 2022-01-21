@@ -2,7 +2,25 @@ import Foundation
 
 // ref.: https://github.com/apple/swift-corelibs-foundation/blob/b878ee2c106d0883b2c1206aeffa61ca4a287c54/Darwin/Foundation-swiftoverlay/PlistEncoder.swift
 
-public class ObjectEncoder: Encoder {
+public class ObjectEncoder {
+    public var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var nilEncodingStrategy: NilEncodingStrategy = .default
+    public var passthroughTypes: [Encodable.Type] = [Data.self, Date.self]
+    
+    public init() {}
+    
+    public func encode<T: Encodable>(_ value: T) throws -> Any {
+        let encoder = ObjectEncoderInternal()
+        
+        encoder.userInfo = userInfo
+        encoder.nilEncodingStrategy = nilEncodingStrategy
+        encoder.passthroughTypes = passthroughTypes
+        
+        return try encoder.encode(value)
+    }
+}
+
+class ObjectEncoderInternal: Encoder {
     public internal(set) var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any] = [:]
     public var nilEncodingStrategy: NilEncodingStrategy = .default
@@ -66,7 +84,7 @@ public class ObjectEncoder: Encoder {
     }
 }
 
-extension ObjectEncoder {
+extension ObjectEncoderInternal {
     private func cleanup() {
         codingPath.removeAll()
         storage.removeAll()
@@ -110,7 +128,7 @@ extension ObjectEncoder {
     }
 }
 
-extension ObjectEncoder {
+extension ObjectEncoderInternal {
     internal struct Options {
         var userInfo: [CodingUserInfoKey: Any]
         var nilEncodingStrategy: NilEncodingStrategy

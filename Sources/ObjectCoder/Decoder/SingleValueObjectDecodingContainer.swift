@@ -1,11 +1,11 @@
 import Foundation
 
 internal struct SingleValueObjectDecodingContainer: SingleValueDecodingContainer {
-    private let decoder: ObjectDecoder
+    private let decoder: ObjectDecoderInternal
     
     let codingPath: [CodingKey]
     
-    init(referencing decoder: ObjectDecoder, codingPath: [CodingKey]) {
+    init(referencing decoder: ObjectDecoderInternal, codingPath: [CodingKey]) {
         self.decoder = decoder
         self.codingPath = codingPath
     }

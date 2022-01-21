@@ -1,14 +1,14 @@
 import Foundation
 
 internal class KeyedObjectEncodingContainer<Key: CodingKey>: KeyedEncodingContainerProtocol {
-    private let encoder: ObjectEncoder
+    private let encoder: ObjectEncoderInternal
     private let container: DictionaryContainer
     private var nestedContainers: [String: ObjectContainer] = [:]
     private let completion: (_ object: Any) -> Void
     
     let codingPath: [CodingKey]
     
-    init(referencing encoder: ObjectEncoder,
+    init(referencing encoder: ObjectEncoderInternal,
          codingPath: [CodingKey], container: DictionaryContainer,
          completion: @escaping (_ object: Any) -> Void = { _ in }) {
         

@@ -1,7 +1,7 @@
 import Foundation
 
 internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
-    private let decoder: ObjectDecoder
+    private let decoder: ObjectDecoderInternal
     private let container: [Any]
     
     let codingPath: [CodingKey]
@@ -16,7 +16,7 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         return currentIndex >= count!
     }
     
-    init(referencing decoder: ObjectDecoder, codingPath: [CodingKey], container: [Any]) {
+    init(referencing decoder: ObjectDecoderInternal, codingPath: [CodingKey], container: [Any]) {
         self.decoder = decoder
         self.container = container
         self.codingPath = codingPath
@@ -134,8 +134,8 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
     }
     
     mutating func nestedContainer<NestedKey: CodingKey >(
-        keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> {
-        
+        keyedBy type: NestedKey.Type
+    ) throws -> KeyedDecodingContainer<NestedKey> {
         let nestedCodingPath = codingPath + [ObjectKey(index: currentIndex)]
         
         guard !isAtEnd else {
@@ -193,8 +193,8 @@ internal struct UnkeyedObjectDecodingContainer: UnkeyedDecodingContainer {
         
         currentIndex += 1
         
-        return ObjectDecoder(codingPath: superCodingPath,
-                             container: value,
-                             options: decoder.options)
+        return ObjectDecoderInternal(codingPath: superCodingPath,
+                                     container: value,
+                                     options: decoder.options)
     }
 }

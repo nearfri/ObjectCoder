@@ -1,7 +1,7 @@
 import Foundation
 
 internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
-    private let decoder: ObjectDecoder
+    private let decoder: ObjectDecoderInternal
     private let container: [String: Any]
     
     let codingPath: [CodingKey]
@@ -10,7 +10,7 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         return container.keys.compactMap { Key(stringValue: $0) }
     }
     
-    init(referencing decoder: ObjectDecoder,
+    init(referencing decoder: ObjectDecoderInternal,
          codingPath: [CodingKey], container: [String: Any]) {
         
         self.decoder = decoder
@@ -100,9 +100,9 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
         return result
     }
     
-    private func decodeValue<T: InitializableWithAny>(
-        type: T.Type, forKey key: Key) throws -> T {
-        
+    private func decodeValue<T>(
+        type: T.Type, forKey key: Key
+    ) throws -> T where T: InitializableWithAny {
         let value = try self.value(forKey: key)
         if decoder.nilDecodingStrategy.isNilValue(value) {
             throw Errors.valueNotFound(codingPath: codingPath + [key], expectation: type)
@@ -113,8 +113,8 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
     
     func nestedContainer<NestedKey: CodingKey>(
         keyedBy type: NestedKey.Type,
-        forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
-        
+        forKey key: Key
+    ) throws -> KeyedDecodingContainer<NestedKey> {
         let nestedCodingPath = codingPath + [key]
         
         guard let value = container[key.stringValue] else {
@@ -166,8 +166,8 @@ internal struct KeyedObjectDecodingContainer<Key: CodingKey>: KeyedDecodingConta
     private func makeSuperDecoder(key: CodingKey) throws -> Decoder {
         let superCodingPath = codingPath + [key]
         let value = container[key.stringValue] ?? decoder.nilDecodingStrategy.nilValue
-        return ObjectDecoder(codingPath: superCodingPath,
-                             container: value,
-                             options: decoder.options)
+        return ObjectDecoderInternal(codingPath: superCodingPath,
+                                     container: value,
+                                     options: decoder.options)
     }
 }

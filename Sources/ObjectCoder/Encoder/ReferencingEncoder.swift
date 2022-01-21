@@ -1,6 +1,6 @@
 import Foundation
 
-internal class ReferencingEncoder: ObjectEncoder {
+internal class ReferencingEncoder: ObjectEncoderInternal {
     private let referenceCodingPath: [CodingKey]
     private let completion: (_ encodedObject: Any) -> Void
     

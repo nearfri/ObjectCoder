@@ -1,7 +1,7 @@
 import Foundation
 
 internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
-    private let encoder: ObjectEncoder
+    private let encoder: ObjectEncoderInternal
     private let container: ArrayContainer
     private let completion: (_ object: Any) -> Void
     
@@ -11,7 +11,7 @@ internal class UnkeyedObjectEncodingContanier: UnkeyedEncodingContainer {
         return container.count
     }
     
-    init(referencing encoder: ObjectEncoder,
+    init(referencing encoder: ObjectEncoderInternal,
          codingPath: [CodingKey], container: ArrayContainer,
          completion: @escaping (_ object: Any) -> Void = { _ in }) {
         

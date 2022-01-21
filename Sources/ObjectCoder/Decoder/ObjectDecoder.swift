@@ -2,7 +2,25 @@ import Foundation
 
 // ref.: https://github.com/apple/swift-corelibs-foundation/blob/b878ee2c106d0883b2c1206aeffa61ca4a287c54/Darwin/Foundation-swiftoverlay/PlistEncoder.swift
 
-public class ObjectDecoder: Decoder {
+public class ObjectDecoder {
+    public var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var nilDecodingStrategy: NilDecodingStrategy = .default
+    public var passthroughTypes: [Decodable.Type] = [Data.self, Date.self]
+    
+    public init() {}
+    
+    public func decode<T: Decodable>(_ type: T.Type, from value: Any) throws -> T {
+        let decoder = ObjectDecoderInternal()
+        
+        decoder.userInfo = userInfo
+        decoder.nilDecodingStrategy = nilDecodingStrategy
+        decoder.passthroughTypes = passthroughTypes
+        
+        return try decoder.decode(type, from: value)
+    }
+}
+
+class ObjectDecoderInternal: Decoder {
     public internal(set) var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any] = [:]
     public var nilDecodingStrategy: NilDecodingStrategy = .default
@@ -29,8 +47,8 @@ public class ObjectDecoder: Decoder {
     }
     
     public func container<Key: CodingKey>(
-        keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
-        
+        keyedBy type: Key.Type
+    ) throws -> KeyedDecodingContainer<Key> {
         switch storage.topContainer {
         case let topContainer as [String: Any]:
             let decodingContainer = KeyedObjectDecodingContainer<Key>(
@@ -68,7 +86,7 @@ public class ObjectDecoder: Decoder {
     }
 }
 
-extension ObjectDecoder {
+extension ObjectDecoderInternal {
     private func cleanup() {
         codingPath.removeAll()
         storage.removeAll()
@@ -90,7 +108,7 @@ extension ObjectDecoder {
     }
 }
 
-extension ObjectDecoder {
+extension ObjectDecoderInternal {
     internal struct Options {
         var userInfo: [CodingUserInfoKey: Any] = [:]
         var nilDecodingStrategy: NilDecodingStrategy = .default

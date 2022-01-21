@@ -13,21 +13,21 @@ class ObjectCoderTests: XCTestCase {
         super.tearDown()
     }
     
-    #if (os(macOS) || os(iOS)) && arch(x86_64)
+#if (os(macOS) || os(iOS)) && arch(x86_64)
     private func testEncodeFailure<T: Encodable>(
         of value: T,
         file: StaticString = #file,
-        line: UInt = #line) {
-        
+        line: UInt = #line
+    ) {
         _ = catchBadInstruction {
             do {
                 _ = try ObjectEncoder().encode(value)
                 XCTFail("Encode of top-level \(T.self) was expected to fail.",
-                    file: file, line: line)
+                        file: file, line: line)
             } catch {}
         }
     }
-    #endif
+#endif
     
     private func testRoundTrip<T, U>(
         of value: T,
@@ -35,8 +35,8 @@ class ObjectCoderTests: XCTestCase {
         nilEncodingStrategy: NilEncodingStrategy? = nil,
         nilDecodingStrategy: NilDecodingStrategy? = nil,
         file: StaticString = #file,
-        line: UInt = #line) where T: Codable, T: Equatable, U: Equatable {
-        
+        line: UInt = #line
+    ) where T: Codable, T: Equatable, U: Equatable {
         let encodedValue: Any
         do {
             let encoder = ObjectEncoder()
@@ -67,7 +67,7 @@ class ObjectCoderTests: XCTestCase {
             }
             let decodedValue = try decoder.decode(T.self, from: encodedValue)
             XCTAssertEqual(decodedValue, value, "\(T.self) did not round-trip to an equal value.",
-                file: file, line: line)
+                           file: file, line: line)
         } catch {
             XCTFail("Failed to decode \(T.self): \(error)", file: file, line: line)
         }
@@ -115,8 +115,7 @@ class ObjectCoderTests: XCTestCase {
     
     private func testFixedWidthInteger<T>(
         type: T.Type, file: StaticString = #file, line: UInt = #line
-        ) where T: FixedWidthInteger & Codable {
-        
+    ) where T: FixedWidthInteger & Codable {
         testRoundTrip(of: type.min, expectedEncodedValue: type.min, file: file, line: line)
         testRoundTrip(of: type.max, expectedEncodedValue: type.max, file: file, line: line)
     }
@@ -128,8 +127,7 @@ class ObjectCoderTests: XCTestCase {
     
     private func testFloatingPoint<T>(
         type: T.Type, file: StaticString = #file, line: UInt = #line
-        ) where T: FloatingPoint & Codable {
-        
+    ) where T: FloatingPoint & Codable {
         testRoundTrip(of: type.leastNormalMagnitude,
                       expectedEncodedValue: type.leastNormalMagnitude,
                       file: file, line: line)
@@ -309,8 +307,8 @@ class ObjectCoderTests: XCTestCase {
     private func testRoundTrip<T>(
         of value: T,
         file: StaticString = #file,
-        line: UInt = #line) where T: Codable, T: Equatable {
-        
+        line: UInt = #line
+    ) where T: Codable, T: Equatable {
         let encodedValue: Any
         do {
             let encoder = ObjectEncoder()
@@ -324,7 +322,7 @@ class ObjectCoderTests: XCTestCase {
             let decoder = ObjectDecoder()
             let decodedValue = try decoder.decode(T.self, from: encodedValue)
             XCTAssertEqual(decodedValue, value, "\(T.self) did not round-trip to an equal value.",
-                file: file, line: line)
+                           file: file, line: line)
         } catch {
             XCTFail("Failed to decode \(T.self): \(error)", file: file, line: line)
         }
@@ -357,8 +355,8 @@ class ObjectCoderTests: XCTestCase {
         init(bool: Bool, int: Int, int8: Int8, int16: Int16, int32: Int32, int64: Int64,
              uint: UInt, uint8: UInt8, uint16: UInt16, uint32: UInt32, uint64: UInt64,
              float: Float, double: Double, string: String, strings: [String],
-             optionalString: String?, optionalStrings: [String?]) {
-            
+             optionalString: String?, optionalStrings: [String?]
+        ) {
             self.bool = bool
             self.int = int
             self.int8 = int8
@@ -716,28 +714,28 @@ class ObjectCoderTests: XCTestCase {
         testRoundTrip(of: Model.testValue, expectedEncodedValue: expectedValue)
     }
     
-    #if (os(macOS) || os(iOS)) && arch(x86_64)
+#if (os(macOS) || os(iOS)) && arch(x86_64)
     func testEncodingConflictedTypeNestedContainersWithTheSameTopLevelKey() {
         struct Model : Encodable, Equatable {
             let first: String
-
+            
             func encode(to encoder: Encoder) throws {
                 var container = encoder.container(keyedBy: TopLevelCodingKeys.self)
-
+                
                 var firstNestedContainer = container.nestedContainer(
                     keyedBy: FirstNestedCodingKeys.self, forKey: .top)
                 try firstNestedContainer.encode(self.first, forKey: .first)
-
+                
                 // The following line would fail as it attempts to re-encode into
                 // already encoded container is invalid. This will always fail
                 var secondNestedContainer = container.nestedUnkeyedContainer(forKey: .top)
                 try secondNestedContainer.encode("second")
             }
-
+            
             init(first: String) {
                 self.first = first
             }
-
+            
             static var testValue: Model {
                 return Model(first: "Johnny Appleseed")
             }
@@ -745,7 +743,7 @@ class ObjectCoderTests: XCTestCase {
             enum TopLevelCodingKeys : String, CodingKey {
                 case top
             }
-
+            
             enum FirstNestedCodingKeys : String, CodingKey {
                 case first
             }
@@ -755,7 +753,7 @@ class ObjectCoderTests: XCTestCase {
         // already encoded container is invalid. This will always fail
         testEncodeFailure(of: Model.testValue)
     }
-    #endif
+#endif
     
     // MARK: - Encoding Optional Types
     
@@ -960,8 +958,8 @@ class ObjectCoderTests: XCTestCase {
         private func testNestedKeyedContainer(
             firstLevelContainer: inout KeyedEncodingContainer<TopLevelCodingKeys>,
             in encoder: Encoder,
-            baseCodingPath: [CodingKey]) {
-            
+            baseCodingPath: [CodingKey]
+        ) {
             // Nested container for key should have a new key pushed on.
             var secondLevelContainer = firstLevelContainer.nestedContainer(
                 keyedBy: IntermediateCodingKeys.self, forKey: .a)
@@ -1005,8 +1003,8 @@ class ObjectCoderTests: XCTestCase {
         private func testNestedUnkeyedContainer(
             firstLevelContainer: inout KeyedEncodingContainer<TopLevelCodingKeys>,
             in encoder: Encoder,
-            baseCodingPath: [CodingKey]) {
-            
+            baseCodingPath: [CodingKey]
+        ) {
             // Nested container for key should have a new key pushed on.
             var secondLevelContainer = firstLevelContainer.nestedUnkeyedContainer(forKey: .b)
             expectEqualPaths(encoder.codingPath, baseCodingPath,
@@ -1145,8 +1143,8 @@ class ObjectCoderTests: XCTestCase {
         private func testNestedKeyedContainer(
             firstLevelContainer: KeyedDecodingContainer<TopLevelCodingKeys>,
             in decoder: Decoder,
-            baseCodingPath: [CodingKey]) throws {
-            
+            baseCodingPath: [CodingKey]
+        ) throws {
             // Nested container for key should have a new key pushed on.
             let secondLevelContainer = try firstLevelContainer.nestedContainer(
                 keyedBy: IntermediateCodingKeys.self, forKey: .a)
@@ -1190,8 +1188,8 @@ class ObjectCoderTests: XCTestCase {
         private func testNestedUnkeyedContainer(
             firstLevelContainer: KeyedDecodingContainer<TopLevelCodingKeys>,
             in decoder: Decoder,
-            baseCodingPath: [CodingKey]) throws {
-            
+            baseCodingPath: [CodingKey]
+        ) throws {
             // Nested container for key should have a new key pushed on.
             var secondLevelContainer = try firstLevelContainer.nestedUnkeyedContainer(forKey: .b)
             expectEqualPaths(decoder.codingPath, baseCodingPath,
@@ -1263,8 +1261,7 @@ class ObjectCoderTests: XCTestCase {
     private func testRoundTripTypeCoercionFailure<T, U>(
         of value: T, as type: U.Type,
         file: StaticString = #file, line: UInt = #line
-        ) where T: Codable, U: Codable {
-        
+    ) where T: Codable, U: Codable {
         do {
             let encodedValue = try ObjectEncoder().encode(value)
             _ = try ObjectDecoder().decode(U.self, from: encodedValue)
@@ -1671,12 +1668,14 @@ class ObjectCoderTests: XCTestCase {
 }
 
 // MARK: - Helper Functions
-private func expectEqualPaths(_ lhs: [CodingKey], _ rhs: [CodingKey], _ prefix: String,
-                              file: StaticString = #file,
-                              line: UInt = #line) {
+private func expectEqualPaths(
+    _ lhs: [CodingKey], _ rhs: [CodingKey], _ prefix: String,
+    file: StaticString = #file,
+    line: UInt = #line
+) {
     if lhs.count != rhs.count {
         XCTFail("\(prefix) [CodingKey].count mismatch: \(lhs.count) != \(rhs.count)",
-            file: file, line: line)
+                file: file, line: line)
         return
     }
     
@@ -1689,23 +1688,23 @@ private func expectEqualPaths(_ lhs: [CodingKey], _ rhs: [CodingKey], _ prefix: 
             break
         case (.some(let i1), .none):
             XCTFail("\(intFailDesc): \(type(of: key1))(\(i1)) != nil",
-                file: file, line: line)
+                    file: file, line: line)
             return
         case (.none, .some(let i2)):
             XCTFail("\(intFailDesc): nil != \(type(of: key2))(\(i2))",
-                file: file, line: line)
+                    file: file, line: line)
             return
         case (.some(let i1), .some(let i2)):
             guard i1 == i2 else {
                 XCTFail("\(intFailDesc): \(type(of: key1))(\(i1)) != \(type(of: key2))(\(i2))",
-                    file: file, line: line)
+                        file: file, line: line)
                 return
             }
         }
         
         XCTAssertEqual(key1.stringValue, key2.stringValue,
                        "\(strFailDesc): \(type(of: key1))('\(key1.stringValue)') "
-                        + "!= \(type(of: key2))('\(key2.stringValue)')",
-            file: file, line: line)
+                       + "!= \(type(of: key2))('\(key2.stringValue)')",
+                       file: file, line: line)
     }
 }

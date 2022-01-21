@@ -1,6 +1,6 @@
 import Foundation
 
-// ref.: https://github.com/apple/swift/blob/master/stdlib/public/Darwin/Foundation/PlistEncoder.swift
+// ref.: https://github.com/apple/swift-corelibs-foundation/blob/b878ee2c106d0883b2c1206aeffa61ca4a287c54/Darwin/Foundation-swiftoverlay/PlistEncoder.swift
 
 public class ObjectEncoder: Encoder {
     public internal(set) var codingPath: [CodingKey]
